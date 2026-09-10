@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>บัญชีงานเกษียณอายุราชการ</title>
+<link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;600;700&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
+<style>
+  *{box-sizing:border-box;font-family:"Sarabun","Segoe UI",sans-serif}
+  body{margin:0;background:#f2f5f9;color:#1f2937;padding:16px}
+  .wrap{max-width:1180px;margin:auto}
+  h1{font-size:22px;margin:0 0 4px}
+  .sub{color:#6b7280;font-size:14px}
+
+  .topbar{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:16px;flex-wrap:wrap}
+  .user{display:flex;align-items:center;gap:8px;background:#fff;padding:6px 12px;border-radius:99px;box-shadow:0 1px 3px rgba(0,0,0,.08)}
+  .user img{width:30px;height:30px;border-radius:50%;object-fit:cover}
+  .user span{font-size:13px}
+  .badge-admin{background:#fef3c7;color:#92400e;padding:2px 9px;border-radius:99px;font-size:11px;font-weight:700}
+
+  .cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:12px;margin-bottom:18px}
+  .card{background:#fff;border-radius:12px;padding:14px 16px;box-shadow:0 1px 3px rgba(0,0,0,.08)}
+  .card .label{font-size:13px;color:#6b7280}
+  .card .value{font-size:22px;font-weight:700;margin-top:4px}
+  .green{color:#059669}.red{color:#dc2626}.blue{color:#2563eb}
+
+  .panel{background:#fff;border-radius:12px;padding:16px;box-shadow:0 1px 3px rgba(0,0,0,.08);margin-bottom:18px}
+  .row{display:grid;grid-template-columns:repeat(auto-fit,minmax(155px,1fr));gap:10px;align-items:end}
+  label{font-size:12px;color:#6b7280;display:block;margin-bottom:4px}
+  input,select,button{padding:9px 10px;border:1px solid #d1d5db;border-radius:8px;font-size:14px;width:100%}
+  input[type=file]{padding:6px}
+  button{background:#2563eb;color:#fff;border:none;cursor:pointer;font-weight:600}
+  button:hover{opacity:.9}
+  button:disabled{opacity:.5;cursor:not-allowed}
+  .btn-ghost{background:#475569;width:auto}
+  .btn-del{background:#ef4444;padding:5px 9px;font-size:12px;width:auto}
+  .btn-edit{background:#f59e0b;padding:5px 9px;font-size:12px;width:auto;margin-right:4px}
+
+  table{width:100%;border-collapse:collapse;font-size:14px}
+  th,td{padding:9px 8px;border-bottom:1px solid #eef1f5;text-align:left}
+  th{background:#f8fafc;font-size:13px;color:#475569}
+  td.num,th.num{text-align:right}
+  td.ctr,th.ctr{text-align:center}
+  .tag{padding:2px 8px;border-radius:99px;font-size:12px;background:#e0e7ff;color:#3730a3;white-space:nowrap}
+  .tag.in{background:#d1fae5;color:#065f46}
+  .thumb{width:42px;height:42px;object-fit:cover;border-radius:6px;border:1px solid #d1d5db;cursor:zoom-in}
+  .thumb:hover{transform:scale(1.08);transition:.15s}
+  .no-img{color:#cbd5e1;font-size:12px}
+
+  #otherWrap{display:none}
+  .toolbar{display:flex;gap:8px;justify-content:flex-end;margin-bottom:10px;flex-wrap:wrap}
+  .toolbar a{background:#059669;color:#fff;padding:9px 14px;border-radius:8px;text-decoration:none;font-size:14px;font-weight:600}
+  .grid2{display:grid;grid-template-columns:1.35fr 1fr;gap:18px;align-items:start}
+  .chartbox{position:relative;height:320px}
+
+  .modal-bg{display:none;position:fixed;inset:0;background:rgba(15,23,42,.55);align-items:center;justify-content:center;padding:16px;z-index:50}
+  .modal-bg.show{display:flex}
+  .modal{background:#fff;border-radius:14px;padding:22px;width:100%;max-width:430px;box-shadow:0 10px 40px rgba(0,0,0,.25);max-height:92vh;overflow:auto}
+  .modal .f{margin-bottom:10px}
+
+  #login{text-align:center;padding:70px 20px}
+  #login button{width:auto;padding:12px 28px;font-size:15px}
+  #app{display:none}
+  #uploadBar{display:none;position:fixed;bottom:20px;right:20px;background:#1e293b;color:#fff;padding:12px 20px;border-radius:10px;font-size:14px;z-index:60}
+  @media(max-width:900px){.grid2{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <!-- ===== LOGIN ===== -->
+  <div id="login">
+    <h1>📋 ระบบบัญชีงานเกษียณอายุราชการ</h1>
+    <div class="sub" style="margin:8px 0 24px">กรุณาเข้าสู่ระบบเพื่อใช้งาน</div>
+    <button id="btnLogin">🔐 เข้าสู่ระบบด้วย Google</button>
+    <div id="loginErr" style="color:#dc2626;font-size:13px;margin-top:14px"></div>
+  </div>
+
+  <!-- ===== APP ===== -->
+  <div id="app">
+    <div class="topbar">
+      <div>
+        <h1>📋 ระบบบัญชีรายรับ–รายจ่าย งานเกษียณอายุราชการ</h1>
+        <div class="sub">บันทึกบน Firebase Firestore แบบเรียลไทม์</div>
+      </div>
+      <div class="user">
+        <img id="uPhoto" alt=""><span id="uName"></span>
+        <span id="adminBadge" class="badge-admin" style="display:none">ADMIN</span>
+        <button id="btnLogout" class="btn-ghost" style="padding:5px 12px;font-size:12px">ออก</button>
+      </div>
+    </div>
+
+    <div class="cards">
+      <div class="card"><div class="label">รายได้รวม</div><div class="value green" id="sumIn">0.00</div></div>
+      <div class="card"><div class="label">รายจ่ายรวม</div><div class="value red" id="sumOut">0.00</div></div>
+      <div class="card"><div class="label">คงเหลือ</div><div class="value blue" id="balance">0.00</div></div>
+      <div class="card"><div class="label">จำนวนรายการ</div><div class="value" id="count">0</div></div>
+    </div>
+
+    <div class="panel">
+      <form id="form" class="row">
+        <div>
+          <label>ประเภท</label>
+          <select id="type">
+            <option value="income">รายได้</option>
+            <option value="expense" selected>รายจ่าย</option>
+          </select>
+        </div>
+        <div>
+          <label>หมวดค่าใช้จ่าย</label>
+          <select id="category">
+            <option value="ค่าอาหารโต๊ะจีน">ค่าอาหารโต๊ะจีน</option>
+            <option value="ค่าจัดสถานที่เวที">ค่าจัดสถานที่/เวที</option>
+            <option value="ค่าเช่าสถานที่และค่าเครื่องดื่ม">ค่าเช่าสถานที่และค่าเครื่องดื่ม</option>
+            <option value="อื่นๆ">ค่าใช้จ่ายอื่น ๆ</option>
+          </select>
+        </div>
+        <div id="otherWrap">
+          <label>ระบุค่าอะไร</label>
+          <input id="otherName" placeholder="เช่น ค่าของที่ระลึก">
+        </div>
+        <div>
+          <label>รายละเอียด</label>
+          <input id="detail" placeholder="เช่น โต๊ะจีน 30 โต๊ะ" required>
+        </div>
+        <div>
+          <label>จำนวนเงิน (บาท)</label>
+          <input id="amount" type="number" step="0.01" min="0" required>
+        </div>
+        <div>
+          <label>วันที่</label>
+          <input id="date" type="date" required>
+        </div>
+        <div>
+          <label>ใบเสร็จ (รูป)</label>
+          <input id="receipt" type="file" accept="image/*" capture="environment">
+        </div>
+        <div><button type="submit">➕ บันทึก</button></div>
+      </form>
+    </div>
+
+    <div class="grid2">
+      <div class="panel">
+        <div class="toolbar">
+          <a href="report.html">📄 รายงาน A4</a>
+          <button id="exportCsv" class="btn-ghost">⬇ CSV</button>
+        </div>
+        <table>
+          <thead>
+            <tr>
+              <th>วันที่</th><th>ประเภท</th><th>หมวด</th><th>รายละเอียด</th>
+              <th class="num">รายได้</th><th class="num">รายจ่าย</th>
+              <th class="ctr" style="width:56px">ใบเสร็จ</th>
+              <th style="width:105px">จัดการ</th>
+            </tr>
+          </thead>
+          <tbody id="tbody"></tbody>
+        </table>
+      </div>
+
+      <div class="panel">
+        <h3 style="margin:0 0 10px;font-size:16px">สัดส่วนค่าใช้จ่าย</h3>
+        <div class="chartbox"><canvas id="pie"></canvas></div>
+        <table style="margin-top:16px">
+          <thead><tr><th>ประเภท</th><th class="num">บาท</th><th class="num">%</th></tr></thead>
+          <tbody id="summary"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== MODAL แก้ไข ===== -->
+  <div id="modal" class="modal-bg">
+    <div class="modal">
+      <h3 style="margin:0 0 14px;font-size:17px">✏️ แก้ไขรายการ</h3>
+      <form id="editForm">
+        <input type="hidden" id="eId">
+        <div class="f"><label>ประเภท</label>
+          <select id="eType">
+            <option value="income">รายได้</option>
+            <option value="expense">รายจ่าย</option>
+          </select>
+        </div>
+        <div class="f"><label>หมวดค่าใช้จ่าย</label>
+          <select id="eCategory">
+            <option value="ค่าอาหารโต๊ะจีน">ค่าอาหารโต๊ะจีน</option>
+            <option value="ค่าจัดสถานที่เวที">ค่าจัดสถานที่/เวที</option>
+            <option value="ค่าเช่าสถานที่และค่าเครื่องดื่ม">ค่าเช่าสถานที่และค่าเครื่องดื่ม</option>
+            <option value="อื่นๆ">ค่าใช้จ่ายอื่น ๆ</option>
+          </select>
+        </div>
+        <div class="f" id="eOtherWrap" style="display:none"><label>ระบุค่าอะไร</label>
+          <input id="eOtherName" placeholder="เช่น ค่าของที่ระลึก">
+        </div>
+        <div class="f"><label>รายละเอียด</label><input id="eDetail" required></div>
+        <div class="f"><label>จำนวนเงิน (บาท)</label><input id="eAmount" type="number" step="0.01" min="0" required></div>
+        <div class="f"><label>วันที่</label><input id="eDate" type="date" required></div>
+        <div class="f"><label>เปลี่ยน/เพิ่มรูปใบเสร็จ</label>
+          <input id="eReceipt" type="file" accept="image/*">
+          <div id="eCurrentImg" style="margin-top:8px"></div>
+        </div>
+        <div style="display:flex;gap:8px;margin-top:16px">
+          <button type="button" id="eCancel" class="btn-ghost" style="flex:1">ยกเลิก</button>
+          <button type="submit" style="flex:1">💾 บันทึก</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<div id="lightbox" class="modal-bg" style="cursor:zoom-out">
+  <img id="lbImg" style="max-width:92vw;max-height:88vh;border-radius:10px;background:#fff">
+</div>
+<div id="uploadBar">กำลังอัปโหลด… <span id="upPct">0</span>%</div>
+
+<script type="module" src="app.js"></script>
+</body>
+</html>
