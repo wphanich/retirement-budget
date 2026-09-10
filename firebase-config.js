@@ -1,6 +1,5 @@
 // แก้ค่าเหล่านี้จาก Firebase Console > Project settings > Your apps > Web app
-
-  export const firebaseConfig = {
+export const firebaseConfig = {
   apiKey: "AIzaSyDyp5jxnd7S9rcrS8iOsTnSuX2dZ9Y1aQM",
   authDomain: "retirement-budget-e66b8.firebaseapp.com",
   projectId: "retirement-budget-e66b8",
