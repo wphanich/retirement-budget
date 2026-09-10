@@ -9,8 +9,5 @@
   appId: "1:1048564526868:web:8b72688ac3053a36529c01",
   measurementId: "G-0150D2ZGRQ"
 };
-
-
 // รหัสงาน — เปลี่ยนได้ถ้าต้องการแยกงานหลายปี เช่น "retire-2570"
-
 export const EVENT_ID = "retire-2569";
