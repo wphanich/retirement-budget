@@ -2,128 +2,79 @@
 <html lang="th">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
 <title>รายงานสรุปบัญชี งานเกษียณอายุราชการ</title>
-<link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;700&display=swap" rel="stylesheet">
 <style>
-  @page { size: A4 portrait; margin: 18mm 15mm; }
-  *{box-sizing:border-box}
-  body{margin:0;background:#e5e7eb;font-family:"TH Sarabun New","Sarabun",serif;color:#000}
+  @import url('https://fonts.googleapis.com/css2?family=Sarabun:wght@400;700&display=swap');
+  
+  /* บังคับให้หน้ากระดาษเป็น A4 */
+  @page { size: A4 portrait; margin: 15mm; }
+  
+  body { margin: 0; background: #e5e7eb; font-family: "Sarabun", sans-serif; color: #000; }
 
-  .toolbar{position:sticky;top:0;background:#1e293b;padding:10px 16px;display:flex;gap:8px;
-    justify-content:center;flex-wrap:wrap;z-index:10}
-  .toolbar button,.toolbar a{background:#2563eb;color:#fff;border:none;border-radius:8px;
-    padding:9px 18px;font-size:14px;cursor:pointer;text-decoration:none;font-family:"Sarabun",sans-serif}
-  .toolbar .ghost{background:#475569}
-  .toolbar input{padding:8px 10px;border:none;border-radius:8px;font-size:14px;
-    font-family:"Sarabun",sans-serif;min-width:230px}
-
-  .page{width:210mm;min-height:297mm;background:#fff;margin:18px auto;padding:18mm 15mm;
-    box-shadow:0 2px 12px rgba(0,0,0,.18)}
-  .head{text-align:center;line-height:1.5;margin-bottom:6mm}
-  .head .org{font-size:22pt;font-weight:700}
-  .head .title{font-size:20pt;font-weight:700;margin-top:2mm}
-  .head .sub{font-size:16pt}
-  hr.rule{border:none;border-top:1.5px solid #000;margin:5mm 0}
-
-  table{width:100%;border-collapse:collapse;font-size:15pt}
-  th,td{border:1px solid #000;padding:2.2mm 3mm;vertical-align:top}
-  th{background:#f1f5f9;text-align:center;font-weight:700}
-  td.num,th.num{text-align:right}
-  td.ctr{text-align:center}
-  .sec{font-size:17pt;font-weight:700;margin:7mm 0 3mm}
-  tr.total td{font-weight:700;background:#f8fafc}
-  tr.grand td{font-weight:700;background:#e0e7ff;font-size:16pt}
-  .neg{color:#b91c1c}
-  .muted{color:#475569}
-
-  .signbox{display:flex;justify-content:space-between;gap:8mm;margin-top:16mm;text-align:center;font-size:15pt}
-  .sign{flex:1;line-height:2}
-  .sign .line{border-bottom:1px dotted #000;height:14mm;margin-bottom:2mm}
-  .note{font-size:13pt;margin-top:6mm;line-height:1.7}
-
-  .ap-grid{display:grid;grid-template-columns:1fr 1fr;gap:8mm;margin-top:6mm}
-  .ap-item{border:1px solid #000;padding:3mm;page-break-inside:avoid;text-align:center}
-  .ap-item img{width:100%;max-height:95mm;object-fit:contain}
-  .ap-cap{font-size:13pt;margin-top:2mm;line-height:1.4;text-align:left}
-
-  @media print{
-    body{background:#fff}
-    .toolbar{display:none}
-    .page{width:auto;min-height:auto;margin:0;padding:0;box-shadow:none;page-break-after:always}
-    .page:last-child{page-break-after:auto}
-    tr{page-break-inside:avoid}
-    thead{display:table-header-group}
-    .signbox{page-break-inside:avoid}
+  .page { 
+    width: 210mm; min-height: 297mm; background: #fff; 
+    margin: 10px auto; padding: 15mm; box-sizing: border-box;
+    box-shadow: 0 0 10px rgba(0,0,0,0.1);
   }
+
+  /* ปรับขนาดตัวอักษรให้เล็กลงเพื่อไม่ให้ล้น */
+  .head { text-align: center; margin-bottom: 5mm; }
+  .head .org { font-size: 18pt; font-weight: 700; }
+  .head .title { font-size: 16pt; font-weight: 700; margin-top: 2mm; }
+  
+  table { width: 100%; border-collapse: collapse; font-size: 12pt; }
+  th, td { border: 1px solid #000; padding: 2mm; vertical-align: middle; }
+  th { background: #f9f9f9; text-align: center; }
+  
+  .sec { font-size: 14pt; font-weight: 700; margin: 5mm 0 2mm; }
+  .num { text-align: right; }
+  .ctr { text-align: center; }
+
+  /* แก้ไขการพิมพ์ */
+  @media print {
+    body { background: #fff; }
+    .toolbar { display: none; }
+    .page { margin: 0; box-shadow: none; }
+  }
+
+  .toolbar { 
+    position: sticky; top: 0; background: #1e293b; padding: 10px; 
+    display: flex; gap: 10px; justify-content: center; z-index: 100;
+  }
+  button { padding: 8px 16px; cursor: pointer; }
 </style>
 </head>
 <body>
 
 <div class="toolbar">
-  <a href="index.html" class="ghost">← กลับหน้าบันทึก</a>
-  <input id="orgName" placeholder="ชื่อหน่วยงาน" value="โรงเรียน/หน่วยงาน ...........................">
-  <input id="eventName" placeholder="ชื่องาน" value="งานแสดงมุทิตาจิตเกษียณอายุราชการ ประจำปี ๒๕๖๙">
-  <button id="btnPrint">🖨 พิมพ์ / บันทึก PDF</button>
+  <button onclick="history.back()">← กลับ</button>
+  <button onclick="window.print()">🖨 พิมพ์รายงาน</button>
 </div>
 
-<!-- หน้า 1 : รายงานหลัก -->
 <div class="page">
   <div class="head">
-    <div class="org" id="pOrg"></div>
+    <div class="org" id="pOrg">สำนักงาน........................</div>
     <div class="title">รายงานสรุปรายรับ–รายจ่าย</div>
-    <div class="sub" id="pEvent"></div>
-    <div class="sub muted" id="pPeriod"></div>
+    <div id="pEvent">งานเกษียณอายุราชการ</div>
   </div>
-  <hr class="rule">
 
   <div class="sec">๑. รายรับ</div>
   <table>
-    <thead><tr>
-      <th style="width:10mm">ที่</th><th style="width:24mm">วันที่</th>
-      <th>รายการ</th><th class="num" style="width:34mm">จำนวนเงิน (บาท)</th>
-    </tr></thead>
+    <thead><tr><th>ที่</th><th>วันที่</th><th>รายการ</th><th>จำนวนเงิน</th></tr></thead>
     <tbody id="tIncome"></tbody>
   </table>
 
-  <div class="sec">๒. รายจ่าย (จำแนกตามประเภท)</div>
+  <div class="sec">๒. รายจ่าย</div>
   <table>
-    <thead><tr>
-      <th style="width:10mm">ที่</th><th style="width:24mm">วันที่</th>
-      <th>รายการ</th><th class="num" style="width:34mm">จำนวนเงิน (บาท)</th>
-    </tr></thead>
+    <thead><tr><th>ที่</th><th>วันที่</th><th>รายการ</th><th>จำนวนเงิน</th></tr></thead>
     <tbody id="tExpense"></tbody>
   </table>
-
-  <div class="sec">๓. สรุปยอดคงเหลือ</div>
-  <table><tbody id="tSummary"></tbody></table>
-
-  <div class="note">
-    ยอดคงเหลือ (ตัวอักษร) <b><span id="thaiText"></span></b><br>
-    ข้าพเจ้าขอรับรองว่ารายการข้างต้นถูกต้องและเป็นความจริงทุกประการ
+  
+  <!-- ส่วนลงนาม -->
+  <div style="margin-top: 20mm; display: flex; justify-content: space-between; text-align: center;">
+    <div>(......................)<br>ผู้จัดทำ</div>
+    <div>(......................)<br>ผู้อนุมัติ</div>
   </div>
-
-  <div class="signbox">
-    <div class="sign"><div class="line"></div>
-      (...............................................)<br>ผู้จัดทำ / เหรัญญิก<br>
-      วันที่ ......... / ......... / .........</div>
-    <div class="sign"><div class="line"></div>
-      (...............................................)<br>ผู้ตรวจสอบ<br>
-      วันที่ ......... / ......... / .........</div>
-    <div class="sign"><div class="line"></div>
-      (...............................................)<br>ผู้อนุมัติ / ประธานกรรมการ<br>
-      วันที่ ......... / ......... / .........</div>
-  </div>
-</div>
-
-<!-- หน้า 2 : ภาคผนวกใบเสร็จ -->
-<div class="page" id="appendix" style="display:none">
-  <div class="head">
-    <div class="title">ภาคผนวก — สำเนาใบเสร็จรับเงิน</div>
-    <div class="sub" id="apEvent"></div>
-  </div>
-  <hr class="rule">
-  <div id="apGrid" class="ap-grid"></div>
 </div>
 
 <script type="module" src="report.js"></script>
