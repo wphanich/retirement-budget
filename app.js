@@ -247,7 +247,7 @@ function render() {
   rows.forEach(r => {
     const isIn = r.type === "income";
     isIn ? income += r.amount : expense += r.amount;
-    const canEdit = true; || r.uid === auth.currentUser?.uid;
+    const canEdit = isAdmin || r.uid === auth.currentUser?.uid;
     const note = r.updatedBy ? `<div style="font-size:10px;color:#f59e0b">แก้ไขโดย ${esc(r.updatedBy)}</div>` : "";
 
     tb.insertAdjacentHTML("beforeend", `
