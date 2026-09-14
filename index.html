@@ -96,6 +96,10 @@
       <div class="card"><div class="label">รายจ่ายรวม</div><div class="value red" id="sumOut">0.00</div></div>
       <div class="card" style="border: 2px solid #ef4444;"><div>ยอดค้างชำระ (ยังไม่จ่ายเงินสด)</div><div id="unpaidTotal" style="font-size: 24px; font-weight: bold; color: #ef4444;">0.00</div></div>
       <div class="card"><div class="label">คงเหลือ</div><div class="value blue" id="balance">0.00</div></div>
+      <div class="card">
+      <div>ยอดค้างชำระ</div>
+        <div id="sumUnpaid" class="value" style="color:#ef4444">0.00</div>
+      </div>
       <div class="card"><div class="label">จำนวนรายการ</div><div class="value" id="count">0</div></div>
     </div>
 
@@ -197,6 +201,14 @@
         </div>
         <div class="f"><label>รายละเอียด</label><input id="eDetail" required></div>
         <div class="f"><label>จำนวนเงิน (บาท)</label><input id="eAmount" type="number" step="0.01" min="0" required></div>
+        <div id="ePaidWrap" style="display:none; align-items:center; gap:6px;">
+          <input type="checkbox" id="ePaidCheckbox">
+          <label for="ePaidCheckbox">ชำระเงินแล้ว</label>
+        </div>
+        <div id="paidWrap" style="display:none; align-items:center; gap:6px;">
+          <input type="checkbox" id="paidCheckbox" checked>
+          <label for="paidCheckbox">ชำระเงินแล้ว</label>
+        </div>
         <div class="f"><label>วันที่</label><input id="eDate" type="date" required></div>
         <div class="f"><label>เปลี่ยน/เพิ่มรูปใบเสร็จ</label>
           <input id="eReceipt" type="file" accept="image/*">
