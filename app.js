@@ -100,6 +100,9 @@ $("type").addEventListener("change", e => {
   $("category").disabled = isIncome;
   $("otherWrap").style.display = "none";
   if (isIncome) $("category").value = "ค่าอาหารโต๊ะจีน";
+  // แสดง/ซ่อนช่องติ๊กสถานะจ่าย เฉพาะตอนเป็นรายจ่าย
+  const paidWrap = $("paidWrap");
+  if (paidWrap) paidWrap.style.display = isIncome ? "none" : "flex";
 });
 $("category").addEventListener("change", e => {
   $("otherWrap").style.display = e.target.value === "อื่นๆ" ? "block" : "none";
@@ -120,11 +123,16 @@ $("form").addEventListener("submit", async e => {
     const f = $("receipt").files[0];
     const receipt = f ? await uploadReceipt(f) : null;
 
+    // ค่าเริ่มต้นสถานะจ่าย: รายได้ = ไม่เกี่ยวข้อง(true), รายจ่าย = ตามที่ติ๊กในฟอร์ม (ค่าเริ่มต้นติ๊กไว้ = จ่ายแล้ว)
+    const paidEl = $("paidCheckbox");
+    const paid = type === "income" ? true : (paidEl ? paidEl.checked : true);
+
     await addDoc(colRef, {
       type, category,
       detail: $("detail").value.trim(),
       amount: parseFloat($("amount").value),
       date: $("date").value,
+      paid,
       receiptUrl:  receipt?.url  || null,
       receiptPath: receipt?.path || null,
       uid: auth.currentUser.uid,
@@ -134,6 +142,7 @@ $("form").addEventListener("submit", async e => {
     $("detail").value = ""; $("amount").value = "";
     $("otherName").value = ""; $("receipt").value = "";
     $("otherWrap").style.display = "none";
+    if (paidEl) paidEl.checked = true;
   } catch (err) { alert("บันทึกไม่สำเร็จ: " + err.message); }
   finally { btn.disabled = false; }
 });
@@ -153,6 +162,8 @@ $("eType").addEventListener("change", e => {
   const isIncome = e.target.value === "income";
   $("eCategory").disabled = isIncome;
   $("eOtherWrap").style.display = "none";
+  const ePaidWrap = $("ePaidWrap");
+  if (ePaidWrap) ePaidWrap.style.display = isIncome ? "none" : "flex";
 });
 $("eCategory").addEventListener("change", e => {
   $("eOtherWrap").style.display = e.target.value === "อื่นๆ" ? "block" : "none";
@@ -174,6 +185,14 @@ function openEdit(r) {
     $("eCategory").value = r.type === "income" ? "ค่าอาหารโต๊ะจีน" : (r.category || "ค่าอาหารโต๊ะจีน");
     $("eOtherName").value = "";
     $("eOtherWrap").style.display = "none";
+  }
+
+  // ตั้งค่าสถานะจ่ายในฟอร์มแก้ไข
+  const ePaidWrap = $("ePaidWrap");
+  const ePaidEl = $("ePaidCheckbox");
+  if (ePaidWrap && ePaidEl) {
+    ePaidWrap.style.display = r.type === "income" ? "none" : "flex";
+    ePaidEl.checked = r.paid !== false;
   }
 
   $("eReceipt").value = "";
@@ -207,11 +226,13 @@ $("editForm").addEventListener("submit", async e => {
   const btn = e.target.querySelector('button[type="submit"]');
   btn.disabled = true;
   try {
+    const ePaidEl = $("ePaidCheckbox");
     const patch = {
       type, category,
       detail: $("eDetail").value.trim(),
       amount: parseFloat($("eAmount").value),
       date: $("eDate").value,
+      paid: type === "income" ? true : (ePaidEl ? ePaidEl.checked : true),
       updatedAt: serverTimestamp(),
       updatedBy: auth.currentUser.displayName || auth.currentUser.email
     };
@@ -228,6 +249,15 @@ $("editForm").addEventListener("submit", async e => {
   finally { btn.disabled = false; }
 });
 
+/* ================= ติ๊กสถานะจ่ายจากตารางโดยตรง ================= */
+async function togglePaidQuick(id, currentPaid) {
+  try {
+    await updateDoc(doc(db, "events", EVENT_ID, "transactions", id), { paid: !currentPaid });
+  } catch (e) {
+    alert("อัปเดตสถานะไม่สำเร็จ: " + e.message);
+  }
+}
+
 /* ================= REALTIME ================= */
 function startListen() {
   if (unsub) unsub();
@@ -241,15 +271,29 @@ function startListen() {
 function render() {
   const tb = $("tbody");
   tb.innerHTML = rows.length ? "" :
-    `<tr><td colspan="8" style="text-align:center;color:#9ca3af;padding:22px">ยังไม่มีรายการ</td></tr>`;
+    `<tr><td colspan="9" style="text-align:center;color:#9ca3af;padding:22px">ยังไม่มีรายการ</td></tr>`;
 
-  let income = 0, expense = 0;
+  let income = 0, expense = 0, unpaid = 0;
   rows.forEach(r => {
     const isIn = r.type === "income";
     isIn ? income += r.amount : expense += r.amount;
-    // แก้ไขบรรทัดนี้ในฟังก์ชัน render
     const canEdit = isAdmin || (auth.currentUser && r.uid === auth.currentUser.uid);
     const note = r.updatedBy ? `<div style="font-size:10px;color:#f59e0b">แก้ไขโดย ${esc(r.updatedBy)}</div>` : "";
+
+    // สถานะจ่าย เฉพาะรายจ่ายเท่านั้น
+    let paidCell = "-";
+    if (!isIn) {
+      const isPaid = r.paid !== false; // ถ้าไม่มี field paid ให้ถือว่าจ่ายแล้ว (ข้อมูลเก่า)
+      if (!isPaid) unpaid += r.amount;
+      paidCell = `
+        <label style="display:flex;align-items:center;gap:4px;justify-content:center;cursor:${canEdit ? "pointer" : "default"}">
+          <input type="checkbox" ${isPaid ? "checked" : ""} ${canEdit ? "" : "disabled"}
+                 data-toggle-paid="${r.id}" data-current="${isPaid}">
+          <span style="font-size:11px;font-weight:700;color:${isPaid ? "#10b981" : "#ef4444"}">
+            ${isPaid ? "จ่ายแล้ว" : "ค้างจ่าย"}
+          </span>
+        </label>`;
+    }
 
     tb.insertAdjacentHTML("beforeend", `
       <tr>
@@ -260,6 +304,7 @@ function render() {
           <div style="font-size:11px;color:#9ca3af">${esc(r.userName)}</div>${note}</td>
         <td class="num green">${isIn ? baht(r.amount) : "-"}</td>
         <td class="num red">${!isIn ? baht(r.amount) : "-"}</td>
+        <td class="ctr">${paidCell}</td>
         <td class="ctr">${r.receiptUrl
           ? `<img src="${r.receiptUrl}" class="thumb" data-lb="${r.receiptUrl}" alt="ใบเสร็จ">`
           : `<span class="no-img">–</span>`}</td>
@@ -275,6 +320,10 @@ function render() {
   $("balance").textContent = baht(bal);
   $("balance").className = "value " + (bal >= 0 ? "blue" : "red");
   $("count").textContent = rows.length;
+
+  // แสดงยอดค้างจ่าย ถ้ามีการ์ดนี้ใน HTML
+  const unpaidEl = $("sumUnpaid");
+  if (unpaidEl) unpaidEl.textContent = baht(unpaid);
 
   const group = {};
   rows.filter(r => r.type === "expense").forEach(r => {
@@ -333,6 +382,16 @@ $("tbody").addEventListener("click", async e => {
   }
 });
 
+// ฟังการติ๊กเช็คบ็อกซ์สถานะจ่ายในตาราง
+$("tbody").addEventListener("change", async e => {
+  const id = e.target.dataset.togglePaid;
+  if (!id) return;
+  const current = e.target.dataset.current === "true";
+  e.target.disabled = true;
+  await togglePaidQuick(id, current);
+  e.target.disabled = false;
+});
+
 /* ================= LIGHTBOX ================= */
 document.addEventListener("click", e => {
   const url = e.target.dataset.lb;
@@ -342,11 +401,13 @@ document.addEventListener("click", e => {
 
 /* ================= EXPORT CSV ================= */
 $("exportCsv").addEventListener("click", () => {
-  const head = "วันที่,ประเภท,หมวด,รายละเอียด,รายได้,รายจ่าย,ผู้บันทึก,ลิงก์ใบเสร็จ\n";
+  const head = "วันที่,ประเภท,หมวด,รายละเอียด,รายได้,รายจ่าย,สถานะจ่าย,ผู้บันทึก,ลิงก์ใบเสร็จ\n";
   const body = rows.map(r => [
     r.date, r.type === "income" ? "รายได้" : "รายจ่าย", `"${r.category}"`,
     `"${r.detail}"`, r.type === "income" ? r.amount : "",
-    r.type === "expense" ? r.amount : "", `"${r.userName || ""}"`, `"${r.receiptUrl || ""}"`
+    r.type === "expense" ? r.amount : "",
+    r.type === "expense" ? (r.paid !== false ? "จ่ายแล้ว" : "ค้างจ่าย") : "-",
+    `"${r.userName || ""}"`, `"${r.receiptUrl || ""}"`
   ].join(",")).join("\n");
   const blob = new Blob(["\uFEFF" + head + body], {type:"text/csv;charset=utf-8"});
   const a = document.createElement("a");
