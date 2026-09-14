@@ -94,6 +94,7 @@
     <div class="cards">
       <div class="card"><div class="label">รายได้รวม</div><div class="value green" id="sumIn">0.00</div></div>
       <div class="card"><div class="label">รายจ่ายรวม</div><div class="value red" id="sumOut">0.00</div></div>
+      <div class="card" style="border: 2px solid #ef4444;"><div>ยอดค้างชำระ (ยังไม่จ่ายเงินสด)</div><div id="unpaidTotal" style="font-size: 24px; font-weight: bold; color: #ef4444;">0.00</div></div>
       <div class="card"><div class="label">คงเหลือ</div><div class="value blue" id="balance">0.00</div></div>
       <div class="card"><div class="label">จำนวนรายการ</div><div class="value" id="count">0</div></div>
     </div>
@@ -151,6 +152,7 @@
             <tr>
               <th>วันที่</th><th>ประเภท</th><th>หมวด</th><th>รายละเอียด</th>
               <th class="num">รายได้</th><th class="num">รายจ่าย</th>
+              <th>สถานะจ่าย</th> <!-- เพิ่มบรรทัดนี้ -->
               <th class="ctr" style="width:56px">ใบเสร็จ</th>
               <th style="width:105px">จัดการ</th>
             </tr>
